@@ -192,7 +192,12 @@ class TrajectoryUtils():
             # include start node
             wps_interp.append(subtraj[0])
             print("----------------------- Interpolate ----------------------")
+            print("=================================", subtraj)
+            for trj in subtraj:
+                print(trj.point)
             # interpolate headings
+            print(subtraj[0].heading)
+            segment_progress = 0.0
             for i in range(1, len(subtraj) - 1):
 
                 subtraj_point_0 = subtraj[i - 1].point
@@ -211,28 +216,42 @@ class TrajectoryUtils():
                 # else:
                 # desired_heading = wrapAngle( delat_theta + current_heading)
                 # Distance between current and previous waypoint
+                # print("==================================", subtraj_point_1)
                 segment_length = distEuclidean(subtraj_point_0, subtraj_point_1)
-                segment_progress = segment_length / subtraj_len
-                # if(segment_progress < 0.001):
-                #     desired_heading = wrapAngle(g_to.heading)
-                # else:
-                desired_heading = wrapAngle(hdg_from + segment_progress * delta_heading) 
+                print("==================================", subtraj_point_0, subtraj_point_1, segment_length)
+                # if(segment_length < 0.001):
+                #     segment_length = subtraj_len
+                
+                segment_progress = segment_progress + segment_length / subtraj_len
+                # desired_heading = wrapAngle(hdg_from + segment_progress * delta_heading) 
+                # desired_heading = wrapAngle(hdg_from + segment_progress * delta_heading) 
                 # Linear interpolation of heading
                 
+                
+                if(segment_progress < 0.001):
+                    desired_heading = current_heading
+                else:
+                    desired_heading = wrapAngle(hdg_from + segment_progress * delta_heading) 
+                # # Linear interpolation of heading
+                
                     
-                print(" -----> delat_theta, desired_heading, segment_length, subtraj_len", math.degrees(delta_heading), math.degrees(desired_heading), segment_length, subtraj_len)
+                # print(" -----> delat_theta, desired_heading, segment_length, subtraj_len", math.degrees(delta_heading), math.degrees(desired_heading), segment_length, subtraj_len)
                 # [STUDENTS TODO] Change variable 'desired_heading', nothing else
                 
                 # desired_heading = wrapAngle(delat_theta + current_heading)
 
                 # replace heading
-                # current_heading   = desired_heading
+                current_heading   = desired_heading
                 wp         = subtraj[i]
+                print(wp.heading, current_heading)
                 wp.heading = desired_heading
+                
                 wps_interp.append(wp)
 
         # include the very last node
+        print(waypoints[-1].heading)
         wps_interp.append(waypoints[-1])
+        print("============================================================")
 
         return wps_interp
 

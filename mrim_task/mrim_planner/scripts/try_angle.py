@@ -1,29 +1,19 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Define parameters for the circular arc path
-radius = 50  # Radius of the arc
-arc_length = 100  # Total length of the arc
-theta_i = 10  # Initial yaw angle in degrees
-theta_f = 90  # Final yaw angle in degrees
-d = 10  # Incremental distance along the arc
+points = np.array([[ 7.  , 10.52,  4.04],
+       [ 5.01, 10.32,  4.11],
+       [ 5.01, 10.32,  4.11],
+       [ 3.09, 10.87,  4.07],
+       [ 3.09, 10.87,  4.07],
+       [ 1.77, 12.24,  3.45],
+       [ 1.77, 12.24,  3.45],
+       [-7.5 , 17.5 ,  1.  ]])
 
-# Calculate the number of increments along the arc
-n = int(arc_length / d)
 
-# Calculate the total yaw change and yaw change per increment
-delta_theta = theta_f - theta_i
-delta_theta_inc = delta_theta / n
-
-# Generate the positions along the arc and corresponding yaw angles
-angles = np.linspace(0, arc_length / radius, n + 1)
-x = radius * np.sin(angles)
-y = radius * (1 - np.cos(angles))
-yaw_angles = [theta_i + k * delta_theta_inc for k in range(n + 1)]
-
-# Convert yaw angles to radians for plotting vectors
-yaw_angles_rad = np.deg2rad(yaw_angles)
-
+x = points[:,0]
+y = points[:,1]
+yaw_angles_rad = points[:,2]
 # Plot the circular arc path
 plt.figure(figsize=(10, 6))
 plt.plot(x, y, label='Path', color='blue')
