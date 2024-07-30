@@ -1,5 +1,5 @@
 problem:
-  name: "warehouse_small.problem" # [warehouse_small.problem, warehouse_large.problem, warehouse_yard.problem]
+  name: "warehouse_yard.problem" # [warehouse_small.problem, warehouse_large.problem, warehouse_yard.problem]
   plot: False
 
 # Parameters for Traveling Salesman Problem
@@ -29,12 +29,12 @@ path_planner:
 
 # Parameters for path smoothing
 path_smoothing:
-  sampling_step: 0.25  # (m) If horizontal constraints are not satisfied, TOPPRA might have returned infeasible trajectory due to too small sampling step
+  sampling_step: 0.3  # (m) If horizontal constraints are not satisfied, TOPPRA might have returned infeasible trajectory due to too small sampling step
   lookahead_dist: 0.4 # (m)
 
 # Parameters for sampling the UAVs' trajectories [TIP: do path straightening before attempting parametrization]
 trajectory_sampling:
-  with_stops: true # [STUDENTS TODO: implement better method than the default] If true, UAVs will stop at each waypoint (default: true)
+  with_stops: false # [STUDENTS TODO: implement better method than the default] If true, UAVs will stop at each waypoint (default: true)
 
 # Parameters for UAV-to-UAV collision avoidance
 collision_avoidance:

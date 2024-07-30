@@ -192,7 +192,7 @@ class TrajectoryUtils():
             # include start node
             wps_interp.append(subtraj[0])
             print("----------------------- Interpolate ----------------------")
-            print("=================================", subtraj)
+            # print("=================================", subtraj)
             for trj in subtraj:
                 print(trj.point)
             # interpolate headings
@@ -218,7 +218,7 @@ class TrajectoryUtils():
                 # Distance between current and previous waypoint
                 # print("==================================", subtraj_point_1)
                 segment_length = distEuclidean(subtraj_point_0, subtraj_point_1)
-                print("==================================", subtraj_point_0, subtraj_point_1, segment_length)
+                # print("==================================", subtraj_point_0, subtraj_point_1, segment_length)
                 # if(segment_length < 0.001):
                 #     segment_length = subtraj_len
                 
@@ -485,6 +485,17 @@ class TrajectoryUtils():
             # Interpolate heading between waypoints
             traj_hdg_interp = self.interpolateHeading(waypoints)
             # Parametrize trajectory
+            print("================velocity_limits=======", velocity_limits)
+            print("============acceleration_limits===========", acceleration_limits)
+            # velocity_limits = [x - 1.0 for x in velocity_limits]
+            # acceleration_limits = [x - 1.0 for x in acceleration_limits]
+            for i in range(0, 3):
+                velocity_limits[i] = velocity_limits[i]-0.1
+                # acceleration_limits[i] = acceleration_limits[i]-0.1
+                
+            for i in range(0, 3):
+                acceleration_limits[i] = acceleration_limits[i]-0.1
+                
             toppra_trajectory = self.getParametrizedTrajectory(traj_hdg_interp, velocity_limits, acceleration_limits)
 
             sampling_step = trajectory.dT
@@ -497,7 +508,8 @@ class TrajectoryUtils():
 
             # samples = [] # [STUDENTS TODO] Fill this variable with trajectory samples
             number_of_samples = math.floor(toppra_trajectory.duration/sampling_step)
-            samples = np.linspace(0, toppra_trajectory.duration, number_of_samples)
+            samples_times = np.linspace(0, toppra_trajectory.duration, number_of_samples)
+            samples = toppra_trajectory(samples_times)
             # Convert to Trajectory class
             poses      = [Pose(q[0], q[1], q[2], q[3]) for q in samples]
             trajectory = self.posesToTrajectory(poses)
