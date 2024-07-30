@@ -105,7 +105,7 @@ class AStar():
         # Start with the first point
         shortcut_path = [path[0]]
         
-        # Attempt to jump from the last added point to further points
+        # attempt to jump from the last added point to further points
         current_index = 0
         while current_index < len(path) - 1:
             next_index = len(path) - 1  # Start by aiming for the last point
@@ -113,7 +113,7 @@ class AStar():
                 if not self.grid.obstacleBetween(path[current_index], path[next_index]):
                     break
                 next_index -= 1
-            # Add the furthest point reachable without obstacles
+            # add the furthest point reachable without obstacles
             shortcut_path.append(path[next_index])
             current_index = next_index
 
