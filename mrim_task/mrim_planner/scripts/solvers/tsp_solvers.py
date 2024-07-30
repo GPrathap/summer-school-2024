@@ -253,7 +253,6 @@ class TSPSolver3D():
     def clusterViewpoints(self, problem, viewpoints, method):
         '''
         Clusters viewpoints into K (number of robots) clusters.
-
         Parameters:
             problem (InspectionProblem): task problem
             viewpoints (list): list of Viewpoint objects
@@ -268,16 +267,24 @@ class TSPSolver3D():
         if method == 'kmeans':
             # Prepare positions of the viewpoints in the world
             positions = np.array([vp.pose.point.asList() for vp in viewpoints])
-
-            raise NotImplementedError('[STUDENTS TODO] KMeans clustering of viewpoints not implemented. You have to finish it on your own')
+            # raise NotImplementedError('[STUDENTS TODO] KMeans clustering of viewpoints not implemented. You have to finish it on your own')
             # Tips:
             #  - utilize sklearn.cluster.KMeans implementation (https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html)
             #  - after finding the labels, you may want to swap the classes (e.g., by looking at the distance of the UAVs from the cluster centers)
             #  - Find the start poses of the UAVs in problem.start_poses[r].position.{x,y,z}
-
-            # TODO: fill 1D list 'labels' of size len(viewpoints) with indices of the robots
-            labels = [randint(0, k - 1) for vp in viewpoints]
-
+            kmeans = KMeans(n_clusters=2, random_state=0).fit(positions)
+            labels = kmeans.labels_
+            cluster_centers_ = kmeans.cluster_centers_
+            robot_one_pose = problem.start_poses[0].position
+            robot_one_pose = np.array([robot_one_pose.x, robot_one_pose.y, robot_one_pose.z])
+            robot_second_pose = problem.start_poses[1].position
+            robot_second_pose = np.array([robot_second_pose.x, robot_second_pose.y, robot_second_pose.z])
+            distance_to_robot_one = np.linalg.norm(cluster_centers_[0]-robot_one_pose)
+            distance_to_robot_second = np.linalg.norm(cluster_centers_[0]-robot_second_pose)
+            # # TODO: fill 1D list 'labels' of size len(viewpoints) with indices of the robots
+            if(distance_to_robot_second < distance_to_robot_one):
+                labels = [1 - x for x in labels]
+            # labels = [randint(0, k - 1) for vp in viewpoints]
         ## | -------------------- Random clustering ------------------- |
         else:
             labels = [randint(0, k - 1) for vp in viewpoints]

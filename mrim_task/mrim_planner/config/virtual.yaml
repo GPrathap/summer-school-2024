@@ -4,20 +4,20 @@ problem:
 
 # Parameters for Traveling Salesman Problem
 tsp:
-  clustering: 'random'            # [STUDENTS TODO: implement better method than the default] Clustering method of viewpoints: [random (default), kmeans]
-  distance_estimates: 'euclidean' # Method for evaluating cost of paths in TSP heuristic: [euclidean (default), astar, rrt, rrtstar]
+  clustering: 'kmeans'            # [STUDENTS TODO: implement better method than the default] Clustering method of viewpoints: [random (default), kmeans]
+  distance_estimates: 'astar' # Method for evaluating cost of paths in TSP heuristic: [euclidean (default), astar, rrt, rrtstar]
 
 # Parameters for path planning
 path_planner:
   timeout: 10.0              # (s) timeout for single start-to-goal planning
-  method: 'rrt'              # [STUDENTS TODO: implement better method than the default] Method for generating start-to-goal paths: [euclidean, astar, rrt (default), rrtstar]
-  straighten_paths: false    # [STUDENTS TODO: implement better method than the default] Path straightening flag (default: false)
+  method: 'rrtstar'              # [STUDENTS TODO: implement better method than the default] Method for generating start-to-goal paths: [euclidean, astar, rrt (default), rrtstar]
+  straighten_paths: true    # [STUDENTS TODO: implement better method than the default] Path straightening flag (default: false)
 
   # RRT and RRT* method parameters
   rrt:
     branch_size: 2.0 # (m)
     sampling:
-      method: 'uniform' # [STUDENTS TODO: implement better method than the default] Method for sampling random points: [uniform (default), gaussian]
+      method: 'gaussian' # [STUDENTS TODO: implement better method than the default] Method for sampling random points: [uniform (default), gaussian]
       gaussian:
         stddev_inflation: 0.2 # Inflation of standard deviation in all axes during gaussian sampling (m)
     star:
@@ -38,7 +38,7 @@ trajectory_sampling:
 
 # Parameters for UAV-to-UAV collision avoidance
 collision_avoidance:
-  method: 'none' # [STUDENTS TODO: implement better method than the default] [none (default), delay_2nd_till_1st_UAV_finishes, delay_till_no_collisions_occur]
+  method: 'delay_till_no_collisions_occur' # [STUDENTS TODO: implement better method than the default] [none (default), delay_2nd_till_1st_UAV_finishes, delay_till_no_collisions_occur]
 
 # Simulation-specific parameters
 simulation:

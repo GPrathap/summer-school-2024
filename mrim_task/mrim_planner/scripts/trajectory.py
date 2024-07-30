@@ -191,7 +191,7 @@ class TrajectoryUtils():
 
             # include start node
             wps_interp.append(subtraj[0])
-
+            print("----------------------- Interpolate ----------------------")
             # interpolate headings
             for i in range(1, len(subtraj) - 1):
 
@@ -204,12 +204,29 @@ class TrajectoryUtils():
                 #  - interpolate the heading linearly (create a function of distance between two points of the subpath)
                 #  - do not forget to wrap angle to (-pi, pi) (see/use wrapAngle() in utils.py)
                 #  - see/use distEuclidean() in utils.py
-
+                # distance = distEuclidean(subtraj_point_0, subtraj_point_1)
+                # print("====heading angle==================")
+                # if(distance < 0.5):
+                #     desired_heading = g_to.heading
+                # else:
+                # desired_heading = wrapAngle( delat_theta + current_heading)
+                # Distance between current and previous waypoint
+                segment_length = distEuclidean(subtraj_point_0, subtraj_point_1)
+                segment_progress = segment_length / subtraj_len
+                # if(segment_progress < 0.001):
+                #     desired_heading = wrapAngle(g_to.heading)
+                # else:
+                desired_heading = wrapAngle(hdg_from + segment_progress * delta_heading) 
+                # Linear interpolation of heading
+                
+                    
+                print(" -----> delat_theta, desired_heading, segment_length, subtraj_len", math.degrees(delta_heading), math.degrees(desired_heading), segment_length, subtraj_len)
                 # [STUDENTS TODO] Change variable 'desired_heading', nothing else
-                desired_heading = waypoints[0].heading
+                
+                # desired_heading = wrapAngle(delat_theta + current_heading)
 
                 # replace heading
-                current_heading   = desired_heading
+                # current_heading   = desired_heading
                 wp         = subtraj[i]
                 wp.heading = desired_heading
                 wps_interp.append(wp)
@@ -454,13 +471,14 @@ class TrajectoryUtils():
             sampling_step = trajectory.dT
 
             # STUDENTS TODO: Sample the path parametrization 'toppra_trajectory' (instance of TOPPRA library).
-            raise NotImplementedError('[STUDENTS TODO] Trajectory sampling not finished. You have to implement it on your own.')
+            # raise NotImplementedError('[STUDENTS TODO] Trajectory sampling not finished. You have to implement it on your own.')
             # Tips:
             #  - check code examples for TOPPRA: https://hungpham2511.github.io/toppra/auto_examples/index.html
             #  - use 'toppra_trajectory' and the predefined sampling step 'sampling_step'
 
-            samples = [] # [STUDENTS TODO] Fill this variable with trajectory samples
-
+            # samples = [] # [STUDENTS TODO] Fill this variable with trajectory samples
+            number_of_samples = math.floor(toppra_trajectory.duration/sampling_step)
+            samples = np.linspace(0, toppra_trajectory.duration, number_of_samples)
             # Convert to Trajectory class
             poses      = [Pose(q[0], q[1], q[2], q[3]) for q in samples]
             trajectory = self.posesToTrajectory(poses)
@@ -621,7 +639,7 @@ class TrajectoryUtils():
         ## |  [COLLISION AVOIDANCE METHOD #2]: Delay UAV with shorter trajectory at start until there is no collision occurring  |
         elif method == 'delay_till_no_collisions_occur':
 
-            raise NotImplementedError('[STUDENTS TODO] Collision prevention method \'delay_till_no_collisions_occur\' not finished. You have to finish it on your own.')
+            # raise NotImplementedError('[STUDENTS TODO] Collision prevention method \'delay_till_no_collisions_occur\' not finished. You have to finish it on your own.')
             # Tips:
             #  - you might select which trajectory it is better to delay
             #  - the smallest delay step is the sampling step stored in variable 'self.dT'
@@ -633,19 +651,20 @@ class TrajectoryUtils():
             # Decide which UAV should be delayed
             # [STUDENTS TODO] CHANGE BELOW
             delay_robot_idx, nondelay_robot_idx = 0, 1
+            if(traj_lens[1] < traj_lens[0]):
+                delay_robot_idx, nondelay_robot_idx = 1, 0
 
             # TIP: use function `self.trajectoriesCollide()` to check if two trajectories are in collision
-            collision_flag, collision_idx = ...
-
+            collision_flag, collision_idx = self.trajectoriesCollide(trajectories[0], trajectories[1], safety_distance)
             while collision_flag:
 
                 # delay the shorter-trajectory UAV at the start point by sampling period
                 delay_t += delay_step
 
                 # [STUDENTS TODO] use function `trajectory.delayStart(X)` to delay a UAV at the start location by X seconds
-
+                trajectories[delay_robot_idx].delayStart(delay_t)
                 # keep checking if the robot trajectories collide
-                collision_flag, _ = ...
+                collision_flag, _ = self.trajectoriesCollide(trajectories[0], trajectories[1], safety_distance)
 
         # # #}
 
