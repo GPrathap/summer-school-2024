@@ -98,28 +98,48 @@ class AStar():
         return sqrt(a**2 + b**2 + c**2)
 
     def halveAndTest(self, path):
-        pt1 = path[0]
-        pt2 = path[-1]
-        
+        # If the path is very short, no need to shorten it
         if len(path) <= 2:
             return path
-
-        # raise NotImplementedError('[STUDENTS TODO] A*: path straightening is not finished. Finish it on your own.')
-        # Tips:
-        #  - divide the given path by a certain ratio and use this method recursively
-
-        if self.grid.obstacleBetween(pt1, pt2):
-
-            # [STUDENTS TODO] Replace seg1 and seg2 variables effectively
-            # seg1 = path[:1]
-            # seg2 = path[1:]
-            mid_index = len(path) // 2
-            seg1 = self.halveAndTest(path[:mid_index + 1])
-            seg2 = self.halveAndTest(path[mid_index:])
-            seg1.extend(seg2)
-            return seg1
         
-        return [pt1, pt2]
+        # Start with the first point
+        shortcut_path = [path[0]]
+        
+        # Attempt to jump from the last added point to further points
+        current_index = 0
+        while current_index < len(path) - 1:
+            next_index = len(path) - 1  # Start by aiming for the last point
+            while next_index > current_index + 1:
+                if not self.grid.obstacleBetween(path[current_index], path[next_index]):
+                    break
+                next_index -= 1
+            # Add the furthest point reachable without obstacles
+            shortcut_path.append(path[next_index])
+            current_index = next_index
+
+        return shortcut_path
+        # pt1 = path[0]
+        # pt2 = path[-1]
+        
+        # if len(path) <= 2:
+        #     return path
+
+        # # raise NotImplementedError('[STUDENTS TODO] A*: path straightening is not finished. Finish it on your own.')
+        # # Tips:
+        # #  - divide the given path by a certain ratio and use this method recursively
+
+        # if self.grid.obstacleBetween(pt1, pt2):
+
+        #     # [STUDENTS TODO] Replace seg1 and seg2 variables effectively
+        #     # seg1 = path[:1]
+        #     # seg2 = path[1:]
+        #     mid_index = len(path) // 2
+        #     seg1 = self.halveAndTest(path[:mid_index + 1])
+        #     seg2 = self.halveAndTest(path[mid_index:])
+        #     seg1.extend(seg2)
+        #     return seg1
+        
+        # return [pt1, pt2]
 
     def generatePath(self, m_start, m_goal):
         

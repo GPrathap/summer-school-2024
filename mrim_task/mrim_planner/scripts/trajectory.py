@@ -187,16 +187,9 @@ class TrajectoryUtils():
             current_heading = hdg_from
             subtraj_len = self.getLength(subtraj)
 
-            ## | ----------------------- Interpolate ---------------------- |
-
             # include start node
             wps_interp.append(subtraj[0])
-            print("----------------------- Interpolate ----------------------")
-            # print("=================================", subtraj)
-            for trj in subtraj:
-                print(trj.point)
             # interpolate headings
-            print(subtraj[0].heading)
             segment_progress = 0.0
             for i in range(1, len(subtraj) - 1):
 
@@ -209,50 +202,24 @@ class TrajectoryUtils():
                 #  - interpolate the heading linearly (create a function of distance between two points of the subpath)
                 #  - do not forget to wrap angle to (-pi, pi) (see/use wrapAngle() in utils.py)
                 #  - see/use distEuclidean() in utils.py
-                # distance = distEuclidean(subtraj_point_0, subtraj_point_1)
-                # print("====heading angle==================")
-                # if(distance < 0.5):
-                #     desired_heading = g_to.heading
-                # else:
-                # desired_heading = wrapAngle( delat_theta + current_heading)
-                # Distance between current and previous waypoint
-                # print("==================================", subtraj_point_1)
                 segment_length = distEuclidean(subtraj_point_0, subtraj_point_1)
-                # print("==================================", subtraj_point_0, subtraj_point_1, segment_length)
-                # if(segment_length < 0.001):
-                #     segment_length = subtraj_len
-                
                 segment_progress = segment_progress + segment_length / subtraj_len
-                # desired_heading = wrapAngle(hdg_from + segment_progress * delta_heading) 
-                # desired_heading = wrapAngle(hdg_from + segment_progress * delta_heading) 
-                # Linear interpolation of heading
-                
-                
                 if(segment_progress < 0.001):
                     desired_heading = current_heading
                 else:
                     desired_heading = wrapAngle(hdg_from + segment_progress * delta_heading) 
-                # # Linear interpolation of heading
                 
-                    
-                # print(" -----> delat_theta, desired_heading, segment_length, subtraj_len", math.degrees(delta_heading), math.degrees(desired_heading), segment_length, subtraj_len)
                 # [STUDENTS TODO] Change variable 'desired_heading', nothing else
                 
-                # desired_heading = wrapAngle(delat_theta + current_heading)
-
                 # replace heading
                 current_heading   = desired_heading
                 wp         = subtraj[i]
-                print(wp.heading, current_heading)
                 wp.heading = desired_heading
                 
                 wps_interp.append(wp)
 
         # include the very last node
-        print(waypoints[-1].heading)
         wps_interp.append(waypoints[-1])
-        print("============================================================")
-
         return wps_interp
 
     # # #}
@@ -485,16 +452,14 @@ class TrajectoryUtils():
             # Interpolate heading between waypoints
             traj_hdg_interp = self.interpolateHeading(waypoints)
             # Parametrize trajectory
-            print("================velocity_limits=======", velocity_limits)
-            print("============acceleration_limits===========", acceleration_limits)
             # velocity_limits = [x - 1.0 for x in velocity_limits]
             # acceleration_limits = [x - 1.0 for x in acceleration_limits]
-            for i in range(0, 3):
+            for i in range(0, 4):
                 velocity_limits[i] = velocity_limits[i]-0.1
-                # acceleration_limits[i] = acceleration_limits[i]-0.1
-                
-            for i in range(0, 3):
                 acceleration_limits[i] = acceleration_limits[i]-0.1
+                
+            # for i in range(0, 4):
+            #     acceleration_limits[i] = acceleration_limits[i]-0.1
                 
             toppra_trajectory = self.getParametrizedTrajectory(traj_hdg_interp, velocity_limits, acceleration_limits)
 

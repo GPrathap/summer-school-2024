@@ -1,5 +1,5 @@
 problem:
-  name: "warehouse_yard.problem" # [warehouse_small.problem, warehouse_large.problem, warehouse_yard.problem]
+  name: "warehouse_large.problem" # [warehouse_small.problem, warehouse_large.problem, warehouse_yard.problem]
   plot: False
 
 # Parameters for Traveling Salesman Problem
@@ -9,7 +9,7 @@ tsp:
 
 # Parameters for path planning
 path_planner:
-  timeout: 50.0              # (s) timeout for single start-to-goal planning
+  timeout: 80.0              # (s) timeout for single start-to-goal planning
   method: 'astar'              # [STUDENTS TODO: implement better method than the default] Method for generating start-to-goal paths: [euclidean, astar, rrt (default), rrtstar]
   straighten_paths: true    # [STUDENTS TODO: implement better method than the default] Path straightening flag (default: false)
 
@@ -25,7 +25,7 @@ path_planner:
 
   # A* method parameters
   astar:
-    grid_resolution: 0.4 # (m)
+    grid_resolution: 0.5 # (m)
 
 # Parameters for path smoothing
 path_smoothing:
