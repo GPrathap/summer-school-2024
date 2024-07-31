@@ -1,5 +1,3 @@
-
-
 print_info: False
 
 # Frames
@@ -11,13 +9,13 @@ dynamic_constraints:
   controller: "fast" # controller constraints
   tolerance: 0.01 # acceptable violation of constraints
   max_velocity:             
-    x: 3.0 # (m/s)
-    y: 3.0 # (m/s)
-    z: 1.0 # (m/s)
+    x: 5.0 # (m/s)
+    y: 5.0 # (m/s)
+    z: 2.0 # (m/s)
   max_acceleration:             
-    x: 3.0 # (m/s2)
-    y: 3.0 # (m/s2)
-    z: 1.0 # (m/s2)
+    x: 5.0 # (m/s2)
+    y: 5.0 # (m/s2)
+    z: 2.0 # (m/s2)
   max_heading_rate: 1.0 # (rad/s)
   max_heading_rate_acceleration: 2.0 # (rad/s^2)
 
@@ -27,7 +25,7 @@ trajectories:
 
   # For planning
   min_distance:
-    mutual:    5.0 # (m)
+    mutual:    2.5 # (m)
     obstacles: 1.9 # (m)
 
   # For evaluation
@@ -57,7 +55,7 @@ mission:
   timeout: 200.0 # (s)
 
 solution_time_constraint:
-  hard: 150.0
+  hard: 200.0
   soft: 80.0
 
 # Cameras

@@ -651,7 +651,7 @@ class TrajectoryUtils():
                 delay_robot_idx, nondelay_robot_idx = 1, 0
 
             # TIP: use function `self.trajectoriesCollide()` to check if two trajectories are in collision
-            collision_flag, collision_idx = self.trajectoriesCollide(trajectories[0], trajectories[1], safety_distance)
+            collision_flag, collision_idx = self.trajectoriesCollide(trajectories[0], trajectories[1], 2.0*safety_distance)
             while collision_flag:
 
                 # delay the shorter-trajectory UAV at the start point by sampling period
