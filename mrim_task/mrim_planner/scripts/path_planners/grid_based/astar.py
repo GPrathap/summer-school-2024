@@ -102,6 +102,11 @@ class AStar():
         if len(path) <= 2:
             return path
         
+        start, end = path[0], path[-1]
+        if not self.grid.obstacleBetween(start, end):
+            # if clear, directly connect start and end points
+            return [start, end]
+        
         # Start with the first point
         shortcut_path = [path[0]]
         

@@ -455,8 +455,8 @@ class TrajectoryUtils():
             # velocity_limits = [x - 1.0 for x in velocity_limits]
             # acceleration_limits = [x - 1.0 for x in acceleration_limits]
             for i in range(0, 4):
-                velocity_limits[i] = velocity_limits[i]-0.1
-                acceleration_limits[i] = acceleration_limits[i]-0.1
+                velocity_limits[i] = velocity_limits[i]-0.18
+                acceleration_limits[i] = acceleration_limits[i]-0.18
                 
             # for i in range(0, 4):
             #     acceleration_limits[i] = acceleration_limits[i]-0.1

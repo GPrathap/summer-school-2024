@@ -1,6 +1,6 @@
 problem:
   name: "warehouse_large.problem" # [warehouse_small.problem, warehouse_large.problem, warehouse_yard.problem]
-  plot: False
+  plot: True
 
 # Parameters for Traveling Salesman Problem
 tsp:
