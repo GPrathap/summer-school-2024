@@ -647,7 +647,7 @@ class TrajectoryUtils():
             # Decide which UAV should be delayed
             # [STUDENTS TODO] CHANGE BELOW
             delay_robot_idx, nondelay_robot_idx = 0, 1
-            if(traj_lens[1] < traj_lens[0]):
+            if(traj_times[1] < traj_times[0]):
                 delay_robot_idx, nondelay_robot_idx = 1, 0
 
             # TIP: use function `self.trajectoriesCollide()` to check if two trajectories are in collision
