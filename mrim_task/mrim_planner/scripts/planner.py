@@ -166,7 +166,7 @@ class MrimPlanner:
 
         # Cluster the rest of the viewpoints into two separate groups
         ## MODIFIED ##
-        # clusters = tsp_solver.clusterViewpoints(problem, nonclustered_vps, method=self._tsp_clustering_method)
+        # 
         mean_position = dict()
         clusters = dict()
         for r in range(problem.number_of_robots):
@@ -206,14 +206,22 @@ class MrimPlanner:
                     # print(str(r)+": ")
 
         if self._custom_cluster_split == 'closest':
-            for point in nonclustered_vps:
-                closest_mean = np.inf
-                robot = None
-                for r in range(problem.number_of_robots):
-                    if closest_mean > vps_distances[r][point.idx]:
-                        closest_mean = closest_mean > vps_distances[r][point.idx]
-                        robot = r
-                clusters[robot].append(point)
+            if len(vps_distances[1]) > 1 or len(vps_distances[0]) > 1:
+                for point in nonclustered_vps:
+                    closest_mean = np.inf
+                    robot = None
+                    for r in range(problem.number_of_robots):
+                        if closest_mean > vps_distances[r][point.idx]:
+                            closest_mean = closest_mean > vps_distances[r][point.idx]
+                            robot = r
+                    clusters[robot].append(point)
+            else:
+                clusters = tsp_solver.clusterViewpoints(problem, nonclustered_vps, method=self._tsp_clustering_method)
+
+        elif self._custom_cluster_split == 'kmeans' or self._custom_cluster_split == 'random':
+            clusters = tsp_solver.clusterViewpoints(problem, nonclustered_vps, method=self._tsp_clustering_method)
+        
+
 
         print(clusters)
 
