@@ -18,8 +18,19 @@ def to_homogeneous(points):
     points_homogeneous = [np.append(point, 1) for point in points]
     return points_homogeneous
 
+def compute_plucker_coordinates(p1, p2):
+    """ Compute Plücker coordinates for the line through points p1 and p2 """
+    L01 = p1[0] * p2[1] - p1[1] * p2[0]
+    L02 = p1[0] * p2[2] - p1[2] * p2[0]
+    L03 = p1[0] * p2[3] - p1[3] * p2[0]
+    L23 = p1[2] * p2[3] - p1[3] * p2[2]
+    L31 = p1[3] * p2[1] - p1[1] * p2[3]
+    L12 = p1[1] * p2[2] - p1[2] * p2[1]
+    
+    return np.array([L01, L02, L03, L23, L31, L12])
+
 def compute_lines(points):
-    """ Compute lines between each pair of points in homogeneous coordinates """
+    """ Compute lines between each pair of points in homogeneous coordinates (3D) """
     points = [p.point.asArray() for p in points]
     points_homogeneous = to_homogeneous(points)
     lines = []
@@ -27,17 +38,30 @@ def compute_lines(points):
     for i in range(len(points) - 1):
         p1 = points_homogeneous[i]
         p2 = points_homogeneous[i + 1]
-        line = np.cross(p1, p2)
+        line = compute_plucker_coordinates(p1, p2)
         lines.append(line)
     
     return lines
 
 
 def compute_distance(point, line):
-    """ Compute the distance from a point to a line in homogeneous coordinates """
-    a, b, c = line
-    x, y, w = point
-    distance = np.abs(a * x + b * y + c) / np.sqrt(a**2 + b**2)
+    """ Compute the distance from a point to a line in 3D using Plücker coordinates """
+    x, y, z, w = to_homogeneous(p.point.asArray())
+    L01, L02, L03, L23, L31, L12 = line
+    
+    # Direction vector of the line
+    d = np.array([L23, L31, L12])
+    # Moment vector of the line
+    m = np.array([L01, L02, L03])
+    
+    # Point as vector
+    p = np.array([x, y, z])
+    
+    # Distance calculation
+    numerator = np.linalg.norm(np.cross(d, p) + m)
+    denominator = np.linalg.norm(d)
+    
+    distance = numerator / denominator
     return distance
 
 def closest_line(point, lines):
