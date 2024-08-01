@@ -189,22 +189,22 @@ class MrimPlanner:
         
         # for r in range(problem.number_of_robots):
         #     print(len(vps_closest_order[r]))
-
-        sorted_vps = []
-        print(len(sorted_vps))
-        print(len(nonclustered_vps))
-        while len(sorted_vps) < len(nonclustered_vps):
-            for r in range(problem.number_of_robots):
-                if len(sorted_vps) >= len(nonclustered_vps):
-                    break
-                for point in vps_closest_order[r]:
-                    if point not in sorted_vps:
-                        next_closest = point
+        if self._custom_cluster_split == 'even':
+            sorted_vps = []
+            print(len(sorted_vps))
+            print(len(nonclustered_vps))
+            while len(sorted_vps) < len(nonclustered_vps):
+                for r in range(problem.number_of_robots):
+                    if len(sorted_vps) >= len(nonclustered_vps):
                         break
-                clusters[r].append(next_closest)
-                sorted_vps.append(next_closest)
-                # print(str(r)+": ")
-                # print
+                    for point in vps_closest_order[r]:
+                        if point not in sorted_vps:
+                            next_closest = point
+                            break
+                    clusters[r].append(next_closest)
+                    sorted_vps.append(next_closest)
+                    # print(str(r)+": ")
+
         if self._custom_cluster_split == 'closest':
             for point in nonclustered_vps:
                 closest_mean = np.inf

@@ -195,6 +195,10 @@ class TSPSolver3D():
 
         path = []
         n    = len(self.distances)
+        print("N:")
+        print(n)
+        print("seq:")
+        print(sequence)
 
         for a in range(n):
             b = (a + 1) % n
