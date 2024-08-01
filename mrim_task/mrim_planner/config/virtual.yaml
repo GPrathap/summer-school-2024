@@ -13,6 +13,7 @@ path_planner:
   method: 'astar'              # [STUDENTS TODO: implement better method than the default] Method for generating start-to-goal paths: [euclidean, astar, rrt (default), rrtstar]
   straighten_paths: true    # [STUDENTS TODO: implement better method than the default] Path straightening flag (default: false)
 
+
   # RRT and RRT* method parameters
   rrt:
     branch_size: 2.0 # (m)

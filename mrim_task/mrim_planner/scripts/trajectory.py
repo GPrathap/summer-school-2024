@@ -643,7 +643,7 @@ class TrajectoryUtils():
 
             delay_step = self.dT
             traj_times = [t.getTime() for t in trajectories]
-            traj_lens  = [t.getLength() for t in trajectories]
+            # traj_lens  = [t.getLength() for t in trajectories]
 
             # Decide which UAV should be delayed
             # [STUDENTS TODO] CHANGE BELOW
