@@ -43,6 +43,7 @@ class MrimPlanner:
         self._sample_with_stops        = rospy.get_param('~trajectory_sampling/with_stops', True)
         self._global_frame             = rospy.get_param('~global_frame', "gps_origin")
         self._tsp_clustering_method    = rospy.get_param('~tsp/clustering', 'random')
+        self._custom_cluster_split     = rospy.get_param('~tsp/custom_cluster_split', 'even')
 
         max_vel_x                      = rospy.get_param('~dynamic_constraints/max_velocity/x', 1.0)
         max_vel_y                      = rospy.get_param('~dynamic_constraints/max_velocity/y', 1.0)
@@ -164,9 +165,63 @@ class MrimPlanner:
                     nonclustered_vps.append(viewpoint)
 
         # Cluster the rest of the viewpoints into two separate groups
-        clusters = tsp_solver.clusterViewpoints(problem, nonclustered_vps, method=self._tsp_clustering_method)
+        ## MODIFIED ##
+        # clusters = tsp_solver.clusterViewpoints(problem, nonclustered_vps, method=self._tsp_clustering_method)
+        mean_position = dict()
+        clusters = dict()
+        for r in range(problem.number_of_robots):
+            clusters[r] = []
+            mean_position[r] = np.mean(np.array([vp.pose.point.asList() for vp in viewpoints[r]]), axis=0)
+
+        print(mean_position)
+
+        vps_closest_order = dict()
+        vps_distances = dict()
+        for r in range(problem.number_of_robots):
+            vps_distances[r] = dict()
+            for point in nonclustered_vps:
+                vps_distances[r][point.idx] = np.linalg.norm( mean_position[r] - point.pose.point.asArray())
+            vps_closest_order[r] = nonclustered_vps.copy()
+            vps_closest_order[r].sort(key=lambda x: vps_distances[r][x.idx])
+        #     print(nonclustered_vps)
+        #     print(vps_closest_order[r] )
+
+        
+        # for r in range(problem.number_of_robots):
+        #     print(len(vps_closest_order[r]))
+
+        sorted_vps = []
+        print(len(sorted_vps))
+        print(len(nonclustered_vps))
+        while len(sorted_vps) < len(nonclustered_vps):
+            for r in range(problem.number_of_robots):
+                if len(sorted_vps) >= len(nonclustered_vps):
+                    break
+                for point in vps_closest_order[r]:
+                    if point not in sorted_vps:
+                        next_closest = point
+                        break
+                clusters[r].append(next_closest)
+                sorted_vps.append(next_closest)
+                # print(str(r)+": ")
+                # print
+        if self._custom_cluster_split == 'closest':
+            for point in nonclustered_vps:
+                closest_mean = np.inf
+                robot = None
+                for r in range(problem.number_of_robots):
+                    if closest_mean > vps_distances[r][point.idx]:
+                        closest_mean = closest_mean > vps_distances[r][point.idx]
+                        robot = r
+                clusters[robot].append(point)
+
+        print(clusters)
+
+
         for r in range(problem.number_of_robots):
             viewpoints[r].extend(clusters[r])
+
+        ## END MODIFIED ##
 
         # print out viewpoints
         for i in range(len(viewpoints)):

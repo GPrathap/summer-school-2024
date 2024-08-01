@@ -268,6 +268,7 @@ class TSPSolver3D():
         if method == 'kmeans':
             # Prepare positions of the viewpoints in the world
             positions = np.array([vp.pose.point.asList() for vp in viewpoints])
+            print(viewpoints)
 
             raise NotImplementedError('[STUDENTS TODO] KMeans clustering of viewpoints not implemented. You have to finish it on your own')
             # Tips:
