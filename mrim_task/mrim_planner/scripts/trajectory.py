@@ -5,7 +5,7 @@ Custom TSP Loader
 
 import math
 import dubins
-
+import copy
 from utils import segmentPointDist, distEuclidean, lineSphereIntersections, simulateStep, wrapAngle, angleDiff, poseInDistance, pointCollidesWithPath
 from data_types import Pose, Viewpoint
 import numpy as np
@@ -682,22 +682,9 @@ class TrajectoryUtils():
             delay_robot_idx, nondelay_robot_idx = 0, 1
             if(traj_times[1] < traj_times[0]):
                 delay_robot_idx, nondelay_robot_idx = 1, 0
-
-            # TIP: use function `self.trajectoriesCollide()` to check if two trajectories are in collision
-            
-            found_proper_separation = False
-            optimal_safety_distance = safety_distance*2.0
-            # print("============segm/ents===========", len(trajectories[delay_robot_idx].segments[0].poses))
-            try_diff_traj_0_1 = trajectories[delay_robot_idx]
-            try_diff_traj_0_2 = trajectories[delay_robot_idx]
-            try_diff_traj_0_2.segments[0].poses.reverse()
-            try_diff_traj_1_1 = trajectories[nondelay_robot_idx]
-            try_diff_traj_1_2 = trajectories[nondelay_robot_idx]
-            try_diff_traj_1_2.segments[0].poses.reverse()
-            
-            
-            trajectories[delay_robot_idx].segments[0].poses.reverse()
-            
+                
+            # optimal_safety_distance = 2.0*safety_distance
+            # found_proper_separation = False
             # segments_with_collision = []
             # while not found_proper_separation:
             #     segments_with_collision = self.computeCollisionSegmentsOfTwoTrajectories(trajectories[0], trajectories[1], optimal_safety_distance)
@@ -705,107 +692,70 @@ class TrajectoryUtils():
             #         optimal_safety_distance  += 0.5
             #     else:
             #         found_proper_separation = True
+
+            # TIP: use function `self.trajectoriesCollide()` to check if two trajectories are in collision
+            old_trajecs = copy.deepcopy(trajectories)
+            self.getUpdatedTrajc(old_trajecs, delay_robot_idx, nondelay_robot_idx, safety_distance)
             
-            # segments_with_collision = self.computeCollisionSegmentsOfTwoTrajectories(trajectories[0], trajectories[1], optimal_safety_distance)
-            # print("============segm/ents===========", segments_with_collision)
-            # print(segments_with_collision)
-            # print(len(trajectories[0].segments))
-            # print(trajectories[0].segments)
-            # print(len(trajectories[1].segments))
-            # print(len(trajectories[0].getPoses()), len(trajectories[1].getPoses()))
-            
-            
-            try_diff_traj_0_1 = trajectories[delay_robot_idx]
-            try_diff_traj_0_2 = trajectories[delay_robot_idx]
-            try_diff_traj_0_2.segments[0].poses.reverse()
-            try_diff_traj_1_1 = trajectories[nondelay_robot_idx]
-            try_diff_traj_1_2 = trajectories[nondelay_robot_idx]
-            try_diff_traj_1_2.segments[0].poses.reverse()
-            
-            times_for_v1, tra_v1, _ = self.getTimesofTrajs( try_diff_traj_0_1, try_diff_traj_1_1, 2.0*safety_distance)
-            times_for_v2, tra_v2, _ = self.getTimesofTrajs( try_diff_traj_0_1, try_diff_traj_1_2, 2.0*safety_distance)
-            times_for_v3, tra_v3, _ = self.getTimesofTrajs( try_diff_traj_0_2, try_diff_traj_1_1, 2.0*safety_distance)
-            
-            print(times_for_v1)
-            segments_with_collision_v1 = self.computeCollisionSegmentsOfTwoTrajectories(tra_v1, try_diff_traj_1_1, 2.0*safety_distance)
-            segments_with_collision_v2 = self.computeCollisionSegmentsOfTwoTrajectories(tra_v2, try_diff_traj_1_2, 2.0*safety_distance)
-            segments_with_collision_v3 = self.computeCollisionSegmentsOfTwoTrajectories(tra_v3, try_diff_traj_1_1, 2.0*safety_distance)
-            
-            print(times_for_v1, times_for_v2, times_for_v3)
-            print(segments_with_collision_v1, segments_with_collision_v2, segments_with_collision_v3)
-            trajectories[1] = tra_v2
-            trajectories[0] = try_diff_traj_1_2
-            
-            
-            
-            collision_flag, collision_idx = self.trajectoriesCollide(trajectories[delay_robot_idx], trajectories[nondelay_robot_idx], 2.0*safety_distance)
+            collision_flag, collision_idx = self.trajectoriesCollide(trajectories[delay_robot_idx], trajectories[nondelay_robot_idx], safety_distance)
             while collision_flag:
-    
                 # delay the shorter-trajectory UAV at the start point by sampling period
                 delay_t += delay_step
                 # [STUDENTS TODO] use function `trajectory.delayStart(X)` to delay a UAV at the start location by X seconds
                 trajectories[delay_robot_idx].delayStart(delay_t)
                 # keep checking if the robot trajectories collide
-                collision_flag, _ = self.trajectoriesCollide(trajectories[delay_robot_idx], trajectories[nondelay_robot_idx], 2.0*safety_distance)
-
-            # traj_times_1_1 = [try_diff_traj_0_1.getTime(), try_diff_traj_1_1.getTime()]
-            
-            
-            
-            
-            # trajectory, _ = self.checkCollisionsOnHorizonAndBreak(trajectories[delay_robot_idx], trajectories[nondelay_robot_idx], 20, optimal_safety_distance)
-            
-            # trajectories[delay_robot_idx] = trajectory
-            # trajectory = 
-            # for seg in segments_with_collision:
-            #     delay_t = 0.0
-            #     inter_count = 0
-            #     while inter_count < 5:
-            #     # delay the shorter-trajectory UAV at the start point by sampling period
-            #         delay_t += delay_step
-            #     #     # [STUDENTS TODO] use function `trajectory.delayStart(X)` to delay a UAV at the start location by X seconds
-            #         start_index = seg[0]
-            #         print("=======================collision_idx,start_index-10 ", collision_idx, start_index-10)
-            #         trajectories[delay_robot_idx].delaySegmentInter(0, delay_t, collision_idx-10)
-            #         # trajectories[delay_robot_idx].delayStart(delay_t)
-            # #     # keep checking if the robot trajectories collide
-            #         print(len(trajectories[0].getPoses()), len(trajectories[1].getPoses()))
-            #         collision_flag, collision_idx = self.trajectoriesCollide(trajectories[0], trajectories[1], optimal_safety_distance)
-                    
-            #         print("=======collision_idx", collision_idx)
-            #         inter_count += 1
-            # while collision_flag:
-
-            #     # delay the shorter-trajectory UAV at the start point by sampling period
-            #     delay_t += delay_step
-            #     # [STUDENTS TODO] use function `trajectory.delayStart(X)` to delay a UAV at the start location by X seconds
-            #     trajectories[delay_robot_idx].delayStart(delay_t)
-            #     # keep checking if the robot trajectories collide
-            #     collision_flag, _ = self.trajectoriesCollide(trajectories[0], trajectories[1], optimal_safety_distance)
-
+                collision_flag, _ = self.trajectoriesCollide(trajectories[delay_robot_idx], trajectories[nondelay_robot_idx], safety_distance)
+        
         if delay_robot_idx is not None:
             delayed_robots, delays = [delay_robot_idx], [delay_t]
 
-        print("==========================================trajectories=============================================")
         traj_times = [t.getTime() for t in trajectories]
-        print("===============", traj_times)
         return trajectories, delayed_robots, delays
-    # # #}
 
     ## | ---------------- Functions: path smoothing --------------- |
-
+    def getUpdatedTrajc(self, trajectories, delay_robot_idx, nondelay_robot_idx, safety_distance):
+        
+        try_diff_traj_0_1 = copy.deepcopy(trajectories[delay_robot_idx])
+        try_diff_traj_0_2 = copy.deepcopy(trajectories[delay_robot_idx])
+        try_diff_traj_0_2.segments[0].poses.reverse()
+        
+        try_diff_traj_1_1 = copy.deepcopy(trajectories[nondelay_robot_idx])
+        try_diff_traj_1_2 = copy.deepcopy(trajectories[nondelay_robot_idx])
+        try_diff_traj_1_2.segments[0].poses.reverse()
+        
+        times_for_v1, tra_v1, _ = self.getTimesofTrajs(copy.deepcopy(try_diff_traj_0_1), copy.deepcopy(try_diff_traj_1_1), safety_distance)
+        times_for_v2, tra_v2, _ = self.getTimesofTrajs(copy.deepcopy(try_diff_traj_0_1), copy.deepcopy(try_diff_traj_1_2), safety_distance)
+        times_for_v3, tra_v3, _ = self.getTimesofTrajs(copy.deepcopy(try_diff_traj_0_2), copy.deepcopy(try_diff_traj_1_1), safety_distance)
+        
+        segments_with_collision_v1 = self.computeCollisionSegmentsOfTwoTrajectories(tra_v1, try_diff_traj_1_1, safety_distance)
+        segments_with_collision_v2 = self.computeCollisionSegmentsOfTwoTrajectories(tra_v2, try_diff_traj_1_2, safety_distance)
+        segments_with_collision_v3 = self.computeCollisionSegmentsOfTwoTrajectories(tra_v3, try_diff_traj_1_1, safety_distance)
+        print("to get some info")
+        print(times_for_v1, times_for_v2, times_for_v3)
+        print(segments_with_collision_v1, segments_with_collision_v2, segments_with_collision_v3)
+        
     def getTimesofTrajs(self, traj1, traj2, safety_distance):
-        collision_flag, collision_idx = self.trajectoriesCollide(traj1, traj2, safety_distance)
         delay_step = self.dT
         delay_t = 0.0
+        trajs  = []
+        trajs.append(traj1)
+        trajs.append(traj2)
+        delay_robot_idx = 0
+        nondelay_robot_idx = 1
+        max_time = traj1.getTime()
+        found_delayed_time = True
+        collision_flag, collision_idx = self.trajectoriesCollide(trajs[delay_robot_idx], trajs[nondelay_robot_idx], safety_distance)
         while collision_flag:
-            # delay the shorter-trajectory UAV at the start point by sampling period
             delay_t += delay_step
-            # [STUDENTS TODO] use function `trajectory.delayStart(X)` to delay a UAV at the start location by X seconds
-            traj1.delayStart(delay_t)
-            # keep checking if the robot trajectories collide
-            collision_flag, _ = self.trajectoriesCollide(traj1, traj2, safety_distance)
-        traj_times = [traj1.getTime(), traj2.getTime()]
+            trajs[delay_robot_idx].delayStart(delay_t)
+            collision_flag, _ = self.trajectoriesCollide(trajs[delay_robot_idx], trajs[nondelay_robot_idx], safety_distance)
+            if(max_time < delay_t):
+                found_delayed_time =  False
+                break
+        if (found_delayed_time):
+            traj_times = [traj1.getTime(), traj2.getTime()]
+        else:
+            traj_times = [-1.0, traj2.getTime()]
         return traj_times, traj1, traj2
     
     # #{ getSmoothPath()
