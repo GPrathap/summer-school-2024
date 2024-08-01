@@ -46,7 +46,7 @@ def compute_lines(points):
 
 def compute_distance(point, line):
     """ Compute the distance from a point to a line in 3D using Plücker coordinates """
-    x, y, z, w = to_homogeneous(p.point.asArray())
+    x, y, z, w = point
     L01, L02, L03, L23, L31, L12 = line
     
     # Direction vector of the line
@@ -67,7 +67,7 @@ def compute_distance(point, line):
 def closest_line(point, lines):
     """ Find the closest line to a given point in homogeneous coordinates """
     point = point.point.asArray() 
-    point_homogeneous = to_homogeneous(point)
+    point_homogeneous = np.append(point, 1)
     distances = [compute_distance(point_homogeneous, line) for line in lines]
     min_distance_index = np.argmin(distances)
     return min_distance_index, distances[min_distance_index]
@@ -234,7 +234,7 @@ class MrimPlanner:
             clusters[r] = []
             mean_position[r] = np.mean(np.array([vp.pose.point.asList() for vp in viewpoints[r]]), axis=0)
 
-        print(mean_position)
+        # print(mean_position)
 
         vps_closest_order = dict()
         vps_distances = dict()
@@ -253,8 +253,8 @@ class MrimPlanner:
         if self._tsp_clustering_method == 'close_means':
             if self._custom_cluster_split == 'even':
                 sorted_vps = []
-                print(len(sorted_vps))
-                print(len(nonclustered_vps))
+                # print(len(sorted_vps))
+                # print(len(nonclustered_vps))
                 while len(sorted_vps) < len(nonclustered_vps):
                     for r in range(problem.number_of_robots):
                         if len(sorted_vps) >= len(nonclustered_vps):
@@ -268,8 +268,8 @@ class MrimPlanner:
                         # print(str(r)+": ")
 
             elif self._custom_cluster_split == 'closest':
-                print(len(viewpoints[1]) > 2 or len(viewpoints[0]) > 2)
-                print(viewpoints)
+                # print(len(viewpoints[1]) > 2 or len(viewpoints[0]) > 2)
+                # print(viewpoints)
                 if len(viewpoints[1]) > 2 or len(viewpoints[0]) > 2:
                     for point in nonclustered_vps:
                         closest_mean = np.inf
@@ -285,29 +285,49 @@ class MrimPlanner:
         elif self._tsp_clustering_method == 'kmeans' or self._tsp_clustering_method == 'random':
             clusters = tsp_solver.clusterViewpoints(problem, nonclustered_vps, method=self._tsp_clustering_method)
         elif self._tsp_clustering_method == 'path_clustering':
-            while len(nonclustered_vps) > 0:
-                segments = dict()
-                best_robot = None
-                shortest_dist = 9999999999999
-                point = None
-                for r in range(problem.number_of_robots):
-                    tour = tsp_solver.plan_tour(problem, viewpoints[r], self._path_planner)
-                    segments[r] = compute_lines(tour)
-                    
-                for p in nonclustered_vps:
+            if self._custom_cluster_split == 'closest':
+                while len(nonclustered_vps) > 0:
+                    segments = dict()
+                    best_robot = None
+                    shortest_dist = 9999999999999
+                    point = None
                     for r in range(problem.number_of_robots):
-                        _, dist = closest_line(p, segments[r])
-                        if dist < shortest_dist:
-                            point = p
-                            best_robot = r
-                            shortest_dist = dist
+                        tour = tsp_solver.plan_tour(problem, viewpoints[r], self._path_planner)
+                        segments[r] = compute_lines(tour)
+                        
+                    for p in nonclustered_vps:
+                        for r in range(problem.number_of_robots):
+                            _, dist = closest_line(p.pose, segments[r])
+                            if dist < shortest_dist:
+                                point = p
+                                best_robot = r
+                                shortest_dist = dist
 
-                viewpoints[best_robot].append(point)
-                nonclustered_vps.remove(point)
+                    viewpoints[best_robot].append(point)
+                    nonclustered_vps.remove(point)
+            elif self._custom_cluster_split == 'even':
+                while len(nonclustered_vps) > 0:
+                    segments = dict()
+                    for r in range(problem.number_of_robots):
+                        tour = tsp_solver.plan_tour(problem, viewpoints[r], self._path_planner)
+                        segments[r] = compute_lines(tour)
+                    
+                    for r in range(problem.number_of_robots):
+                        if len(nonclustered_vps) < 1:
+                            break
+                        shortest_dist = 9999999999999
+                        point = None
+                        for p in nonclustered_vps:
+                            _, dist = closest_line(p.pose, segments[r])
+                            if dist < shortest_dist:
+                                point = p
+                                shortest_dist = dist
+                        viewpoints[r].append(point)
+                        nonclustered_vps.remove(point)
         
 
 
-        print(clusters)
+        # print(clusters)
 
         if self._tsp_clustering_method != 'path_clustering':
             for r in range(problem.number_of_robots):

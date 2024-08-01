@@ -5,7 +5,7 @@ problem:
 # Parameters for Traveling Salesman Problem
 tsp:
   clustering: 'path_clustering'            # random (default), kmeans, close_means, path_clustering] [STUDENTS TODO: implement better method than the default] Clustering method of viewpoints: [
-  custom_cluster_split: 'closest'    # options: 'even' 'closest'
+  custom_cluster_split: 'even'    # options: 'even' 'closest'
   distance_estimates: 'euclidean' # Method for evaluating cost of paths in TSP heuristic: [euclidean (default), astar, rrt, rrtstar]
   neighbourhood_dist: 0
 
@@ -49,7 +49,7 @@ simulation:
 # Visualization parameters
 visualization:
   rviz:
-    use:            False
+    use:            True
     playback_speed: 3.0
     horizon_length: 20
 
