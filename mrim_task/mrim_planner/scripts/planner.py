@@ -399,11 +399,7 @@ class MrimPlanner:
                 exit(-3)
 
             trajectories.append(trajectory)
-        # # #}
-        # print("==========================================segments=========================================")
-        segments = trajectory_utils.computeCollisionSegmentsOfTwoTrajectories(trajectories[0], trajectories[1], self._safety_distance_mutual)
-        print(segments)
-        
+
         
         ## | ------------------- Resolve collisions ------------------- |
         if self._collision_avoidance in self.ALLOWED_COLLISION_AVOIDANCE_METHODS:
