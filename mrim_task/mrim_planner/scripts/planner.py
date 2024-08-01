@@ -189,36 +189,39 @@ class MrimPlanner:
         
         # for r in range(problem.number_of_robots):
         #     print(len(vps_closest_order[r]))
-        if self._custom_cluster_split == 'even':
-            sorted_vps = []
-            print(len(sorted_vps))
-            print(len(nonclustered_vps))
-            while len(sorted_vps) < len(nonclustered_vps):
-                for r in range(problem.number_of_robots):
-                    if len(sorted_vps) >= len(nonclustered_vps):
-                        break
-                    for point in vps_closest_order[r]:
-                        if point not in sorted_vps:
-                            next_closest = point
-                            break
-                    clusters[r].append(next_closest)
-                    sorted_vps.append(next_closest)
-                    # print(str(r)+": ")
-
-        if self._custom_cluster_split == 'closest':
-            if len(vps_distances[1]) > 1 or len(vps_distances[0]) > 1:
-                for point in nonclustered_vps:
-                    closest_mean = np.inf
-                    robot = None
+        if self._tsp_clustering_method == 'custom':
+            if self._custom_cluster_split == 'even':
+                sorted_vps = []
+                print(len(sorted_vps))
+                print(len(nonclustered_vps))
+                while len(sorted_vps) < len(nonclustered_vps):
                     for r in range(problem.number_of_robots):
-                        if closest_mean > vps_distances[r][point.idx]:
-                            closest_mean = closest_mean > vps_distances[r][point.idx]
-                            robot = r
-                    clusters[robot].append(point)
-            else:
-                clusters = tsp_solver.clusterViewpoints(problem, nonclustered_vps, method=self._tsp_clustering_method)
+                        if len(sorted_vps) >= len(nonclustered_vps):
+                            break
+                        for point in vps_closest_order[r]:
+                            if point not in sorted_vps:
+                                next_closest = point
+                                break
+                        clusters[r].append(next_closest)
+                        sorted_vps.append(next_closest)
+                        # print(str(r)+": ")
 
-        elif self._custom_cluster_split == 'kmeans' or self._custom_cluster_split == 'random':
+            elif self._custom_cluster_split == 'closest':
+                print(len(viewpoints[1]) > 2 or len(viewpoints[0]) > 2)
+                print(viewpoints)
+                if len(viewpoints[1]) > 2 or len(viewpoints[0]) > 2:
+                    for point in nonclustered_vps:
+                        closest_mean = np.inf
+                        robot = None
+                        for r in range(problem.number_of_robots):
+                            if closest_mean > vps_distances[r][point.idx]:
+                                closest_mean = closest_mean > vps_distances[r][point.idx]
+                                robot = r
+                        clusters[robot].append(point)
+                else:
+                    clusters = tsp_solver.clusterViewpoints(problem, nonclustered_vps, method=self._tsp_clustering_method)
+
+        elif self._tsp_clustering_method == 'kmeans' or self._tsp_clustering_method == 'random':
             clusters = tsp_solver.clusterViewpoints(problem, nonclustered_vps, method=self._tsp_clustering_method)
         
 
