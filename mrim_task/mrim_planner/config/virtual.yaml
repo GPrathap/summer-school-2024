@@ -1,24 +1,26 @@
 problem:
-  name: "warehouse_small.problem" # [warehouse_small.problem, warehouse_large.problem, warehouse_yard.problem]
+  name: "warehouse_large.problem" # [warehouse_small.problem, warehouse_large.problem, warehouse_yard.problem]
   plot: False
 
 # Parameters for Traveling Salesman Problem
 tsp:
-  clustering: 'random'            # [STUDENTS TODO: implement better method than the default] Clustering method of viewpoints: [random (default), kmeans]
+  clustering: 'path_clustering'            # random (default), kmeans, close_means, path_clustering] [STUDENTS TODO: implement better method than the default] Clustering method of viewpoints: [
   custom_cluster_split: 'even'    # options: 'even' 'closest'
   distance_estimates: 'euclidean' # Method for evaluating cost of paths in TSP heuristic: [euclidean (default), astar, rrt, rrtstar]
+  neighbourhood_dist: 0
 
 # Parameters for path planning
 path_planner:
-  timeout: 10.0              # (s) timeout for single start-to-goal planning
-  method: 'rrt'              # [STUDENTS TODO: implement better method than the default] Method for generating start-to-goal paths: [euclidean, astar, rrt (default), rrtstar]
-  straighten_paths: false    # [STUDENTS TODO: implement better method than the default] Path straightening flag (default: false)
+  timeout: 100.0              # (s) timeout for single start-to-goal planning
+  method: 'astar'              # [STUDENTS TODO: implement better method than the default] Method for generating start-to-goal paths: [euclidean, astar, rrt (default), rrtstar]
+  straighten_paths: true    # [STUDENTS TODO: implement better method than the default] Path straightening flag (default: false)
+
 
   # RRT and RRT* method parameters
   rrt:
     branch_size: 2.0 # (m)
     sampling:
-      method: 'uniform' # [STUDENTS TODO: implement better method than the default] Method for sampling random points: [uniform (default), gaussian]
+      method: 'gaussian' # [STUDENTS TODO: implement better method than the default] Method for sampling random points: [uniform (default), gaussian]
       gaussian:
         stddev_inflation: 0.2 # Inflation of standard deviation in all axes during gaussian sampling (m)
     star:
@@ -26,20 +28,20 @@ path_planner:
 
   # A* method parameters
   astar:
-    grid_resolution: 0.4 # (m)
+    grid_resolution: 0.5 # (m)
 
 # Parameters for path smoothing
 path_smoothing:
-  sampling_step: 0.25  # (m) If horizontal constraints are not satisfied, TOPPRA might have returned infeasible trajectory due to too small sampling step
+  sampling_step: 0.3  # (m) If horizontal constraints are not satisfied, TOPPRA might have returned infeasible trajectory due to too small sampling step
   lookahead_dist: 0.4 # (m)
 
 # Parameters for sampling the UAVs' trajectories [TIP: do path straightening before attempting parametrization]
 trajectory_sampling:
-  with_stops: true # [STUDENTS TODO: implement better method than the default] If true, UAVs will stop at each waypoint (default: true)
+  with_stops: false # [STUDENTS TODO: implement better method than the default] If true, UAVs will stop at each waypoint (default: true)
 
 # Parameters for UAV-to-UAV collision avoidance
 collision_avoidance:
-  method: 'none' # [STUDENTS TODO: implement better method than the default] [none (default), delay_2nd_till_1st_UAV_finishes, delay_till_no_collisions_occur]
+  method: 'delay_till_no_collisions_occur' # [STUDENTS TODO: implement better method than the default] [none (default), delay_2nd_till_1st_UAV_finishes, delay_till_no_collisions_occur]
 
 # Simulation-specific parameters
 simulation:
@@ -48,7 +50,7 @@ simulation:
 # Visualization parameters
 visualization:
   rviz:
-    use:            False
+    use:            True
     playback_speed: 3.0
     horizon_length: 20
 

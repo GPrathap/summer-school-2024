@@ -195,10 +195,10 @@ class TSPSolver3D():
 
         path = []
         n    = len(self.distances)
-        print("N:")
-        print(n)
-        print("seq:")
-        print(sequence)
+        # print("N:")
+        # print(n)
+        # print("seq:")
+        # print(sequence)
 
         for a in range(n):
             b = (a + 1) % n
@@ -276,7 +276,8 @@ class TSPSolver3D():
             #  - utilize sklearn.cluster.KMeans implementation (https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html)
             #  - after finding the labels, you may want to swap the classes (e.g., by looking at the distance of the UAVs from the cluster centers)
             #  - Find the start poses of the UAVs in problem.start_poses[r].position.{x,y,z}
-            kmeans = KMeans(n_clusters=k, random_state=0).fit(positions)
+
+            kmeans = KMeans(n_clusters=2, random_state=0).fit(positions)
             labels = kmeans.labels_
             cluster_centers_ = kmeans.cluster_centers_
             robot_one_pose = problem.start_poses[0].position

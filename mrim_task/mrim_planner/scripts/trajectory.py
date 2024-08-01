@@ -5,8 +5,8 @@ Custom TSP Loader
 
 import math
 import dubins
-
-from utils import segmentPointDist, distEuclidean, lineSphereIntersections, simulateStep, wrapAngle, angleDiff, poseInDistance
+import copy
+from utils import segmentPointDist, distEuclidean, lineSphereIntersections, simulateStep, wrapAngle, angleDiff, poseInDistance, pointCollidesWithPath
 from data_types import Pose, Viewpoint
 import numpy as np
 
@@ -83,7 +83,7 @@ class Trajectory:
 
         # Replace poses at given segment
         self.segments[seg_idx].poses = segment.poses[:index] + sequence + segment.poses[index:]
-
+        
     # # #}
 
     # # #{ delayStart()
@@ -187,12 +187,10 @@ class TrajectoryUtils():
             current_heading = hdg_from
             subtraj_len = self.getLength(subtraj)
 
-            ## | ----------------------- Interpolate ---------------------- |
-
             # include start node
             wps_interp.append(subtraj[0])
-
             # interpolate headings
+            segment_progress = 0.0
             for i in range(1, len(subtraj) - 1):
 
                 subtraj_point_0 = subtraj[i - 1].point
@@ -204,19 +202,24 @@ class TrajectoryUtils():
                 #  - interpolate the heading linearly (create a function of distance between two points of the subpath)
                 #  - do not forget to wrap angle to (-pi, pi) (see/use wrapAngle() in utils.py)
                 #  - see/use distEuclidean() in utils.py
-
+                segment_length = distEuclidean(subtraj_point_0, subtraj_point_1)
+                segment_progress = segment_progress + segment_length / subtraj_len
+                if(segment_progress < 0.001):
+                    desired_heading = current_heading
+                else:
+                    desired_heading = wrapAngle(hdg_from + segment_progress * delta_heading) 
+                
                 # [STUDENTS TODO] Change variable 'desired_heading', nothing else
-                desired_heading = waypoints[0].heading
-
+                
                 # replace heading
                 current_heading   = desired_heading
                 wp         = subtraj[i]
                 wp.heading = desired_heading
+                
                 wps_interp.append(wp)
 
         # include the very last node
         wps_interp.append(waypoints[-1])
-
         return wps_interp
 
     # # #}
@@ -449,18 +452,29 @@ class TrajectoryUtils():
             # Interpolate heading between waypoints
             traj_hdg_interp = self.interpolateHeading(waypoints)
             # Parametrize trajectory
+            # velocity_limits = [x - 1.0 for x in velocity_limits]
+            # acceleration_limits = [x - 1.0 for x in acceleration_limits]
+            for i in range(0, 4):
+                velocity_limits[i] = velocity_limits[i]-0.18
+                acceleration_limits[i] = acceleration_limits[i]-0.18
+                
+            # for i in range(0, 4):
+            #     acceleration_limits[i] = acceleration_limits[i]-0.1
+                
             toppra_trajectory = self.getParametrizedTrajectory(traj_hdg_interp, velocity_limits, acceleration_limits)
 
             sampling_step = trajectory.dT
 
             # STUDENTS TODO: Sample the path parametrization 'toppra_trajectory' (instance of TOPPRA library).
-            raise NotImplementedError('[STUDENTS TODO] Trajectory sampling not finished. You have to implement it on your own.')
+            # raise NotImplementedError('[STUDENTS TODO] Trajectory sampling not finished. You have to implement it on your own.')
             # Tips:
             #  - check code examples for TOPPRA: https://hungpham2511.github.io/toppra/auto_examples/index.html
             #  - use 'toppra_trajectory' and the predefined sampling step 'sampling_step'
 
-            samples = [] # [STUDENTS TODO] Fill this variable with trajectory samples
-
+            # samples = [] # [STUDENTS TODO] Fill this variable with trajectory samples
+            number_of_samples = math.floor(toppra_trajectory.duration/sampling_step)
+            samples_times = np.linspace(0, toppra_trajectory.duration, number_of_samples)
+            samples = toppra_trajectory(samples_times)
             # Convert to Trajectory class
             poses      = [Pose(q[0], q[1], q[2], q[3]) for q in samples]
             trajectory = self.posesToTrajectory(poses)
@@ -522,10 +536,12 @@ class TrajectoryUtils():
 
             # Add extra samples to delay the trajectory
             i = 0
+            min_ax_vel = min(self.max_velocity)
+            min_ax_acc = min(self.max_acceleration) 
             while i == 0 or distEuclidean(traj_poses[collision_idx].point, ref_poses[collision_idx].point) < safety_distance:
 
                 # TODO: slow down continually instead of as fast as possible
-
+                # print("======================v1======================")
                 # Slow down with maximal deceleration
                 stopping_dist  = min(0.0, min_velocity * self.dT - 0.5 * min_ax_acc * (self.dT ** 2))
 
@@ -540,13 +556,12 @@ class TrajectoryUtils():
                 # Add the sample pose
                 traj_poses = traj_poses[:min_velocity_idx + i + 1] + [pose] + traj_poses[min_velocity_idx + i + 1:]
                 total_delay += 1
-
+                # print("======================v2======================", len(traj_poses))
                 min_velocity = stopping_dist / self.dT
                 i += 1
 
             # Go from the start again as new collisions may occur from the delays
             s_idx = 0
-
         # Convert to Trajectory class
         trajectory = self.posesToTrajectory(traj_poses)
 
@@ -621,42 +636,124 @@ class TrajectoryUtils():
         ## |  [COLLISION AVOIDANCE METHOD #2]: Delay UAV with shorter trajectory at start until there is no collision occurring  |
         elif method == 'delay_till_no_collisions_occur':
 
-            raise NotImplementedError('[STUDENTS TODO] Collision prevention method \'delay_till_no_collisions_occur\' not finished. You have to finish it on your own.')
+            # raise NotImplementedError('[STUDENTS TODO] Collision prevention method \'delay_till_no_collisions_occur\' not finished. You have to finish it on your own.')
             # Tips:
             #  - you might select which trajectory it is better to delay
             #  - the smallest delay step is the sampling step stored in variable 'self.dT'
 
             delay_step = self.dT
             traj_times = [t.getTime() for t in trajectories]
-            traj_lens  = [t.getLength() for t in trajectories]
+            # traj_lens  = [t.getLength() for t in trajectories]
 
             # Decide which UAV should be delayed
             # [STUDENTS TODO] CHANGE BELOW
             delay_robot_idx, nondelay_robot_idx = 0, 1
-
-            # TIP: use function `self.trajectoriesCollide()` to check if two trajectories are in collision
-            collision_flag, collision_idx = ...
-
-            while collision_flag:
-
-                # delay the shorter-trajectory UAV at the start point by sampling period
-                delay_t += delay_step
-
-                # [STUDENTS TODO] use function `trajectory.delayStart(X)` to delay a UAV at the start location by X seconds
-
-                # keep checking if the robot trajectories collide
-                collision_flag, _ = ...
-
-        # # #}
-
+            if(traj_times[1] < traj_times[0]):
+                delay_robot_idx, nondelay_robot_idx = 1, 0
+                
+            optimal_safety_distance = 2.0*safety_distance
+            
+            # # TODO option one 
+            old_trajecs = copy.deepcopy(trajectories)
+            selected_trajs = self.getUpdatedTrajc(old_trajecs, delay_robot_idx, nondelay_robot_idx, optimal_safety_distance)
+            trajectories[delay_robot_idx] = selected_trajs[1]
+            trajectories[nondelay_robot_idx] = selected_trajs[2]
+            
+            # TODO option two, with or without option one (exceed the time limits ( due to self.computeCollisionSegmentsOfTwoTrajectories need to check bit more inside)
+            # found_proper_separation = False
+            # segments_with_collision = []
+            # while not found_proper_separation:
+            #     segments_with_collision = self.computeCollisionSegmentsOfTwoTrajectories(trajectories[delay_robot_idx]
+            #                                                                     , trajectories[nondelay_robot_idx], optimal_safety_distance)
+            #     if(len(segments_with_collision)>1):
+            #         optimal_safety_distance  += 1.0
+            #     else:
+            #         found_proper_separation = True
+            # print("==============optimal_safety_distance===", optimal_safety_distance)
+            # collision_flag, collision_idx = self.trajectoriesCollide(trajectories[delay_robot_idx], trajectories[nondelay_robot_idx], optimal_safety_distance)
+            # while collision_flag:
+            #     # delay the shorter-trajectory UAV at the start point by sampling period
+            #     delay_t += delay_step
+            #     # [STUDENTS TODO] use function `trajectory.delayStart(X)` to delay a UAV at the start location by X seconds
+            #     trajectories[delay_robot_idx].delayStart(delay_t)
+            #     # keep checking if the robot trajectories collide
+            #     collision_flag, _ = self.trajectoriesCollide(trajectories[delay_robot_idx], trajectories[nondelay_robot_idx], optimal_safety_distance)
+            
+            # # TODO option three 
+            # collision_flag, collision_idx = self.trajectoriesCollide(trajectories[delay_robot_idx], trajectories[nondelay_robot_idx], optimal_safety_distance)
+            # while collision_flag:
+            #     # delay the shorter-trajectory UAV at the start point by sampling period
+            #     delay_t += delay_step
+            #     # [STUDENTS TODO] use function `trajectory.delayStart(X)` to delay a UAV at the start location by X seconds
+            #     trajectories[delay_robot_idx].delayStart(delay_t)
+            #     # keep checking if the robot trajectories collide
+            #     collision_flag, _ = self.trajectoriesCollide(trajectories[delay_robot_idx], trajectories[nondelay_robot_idx], optimal_safety_distance)
+            
+            
         if delay_robot_idx is not None:
             delayed_robots, delays = [delay_robot_idx], [delay_t]
 
+        traj_times = [t.getTime() for t in trajectories]
         return trajectories, delayed_robots, delays
-    # # #}
 
     ## | ---------------- Functions: path smoothing --------------- |
-
+    def getUpdatedTrajc(self, trajectories, delay_robot_idx, nondelay_robot_idx, safety_distance):
+        
+        try_diff_traj_0_1 = copy.deepcopy(trajectories[delay_robot_idx])
+        try_diff_traj_0_2 = copy.deepcopy(trajectories[delay_robot_idx])
+        try_diff_traj_0_2.segments[0].poses.reverse()
+        
+        try_diff_traj_1_1 = copy.deepcopy(trajectories[nondelay_robot_idx])
+        try_diff_traj_1_2 = copy.deepcopy(trajectories[nondelay_robot_idx])
+        try_diff_traj_1_2.segments[0].poses.reverse()
+        
+        times_for_v1, tra_v1, _ = self.getTimesofTrajs(copy.deepcopy(try_diff_traj_0_1), copy.deepcopy(try_diff_traj_1_1), safety_distance)
+        times_for_v2, tra_v2, _ = self.getTimesofTrajs(copy.deepcopy(try_diff_traj_0_1), copy.deepcopy(try_diff_traj_1_2), safety_distance)
+        times_for_v3, tra_v3, _ = self.getTimesofTrajs(copy.deepcopy(try_diff_traj_0_2), copy.deepcopy(try_diff_traj_1_1), safety_distance)
+        
+        # segments_with_collision_v1 = self.computeCollisionSegmentsOfTwoTrajectories(tra_v1, try_diff_traj_1_1, safety_distance)
+        # segments_with_collision_v2 = self.computeCollisionSegmentsOfTwoTrajectories(tra_v2, try_diff_traj_1_2, safety_distance)
+        # segments_with_collision_v3 = self.computeCollisionSegmentsOfTwoTrajectories(tra_v3, try_diff_traj_1_1, safety_distance)
+        segments_with_collision_v1 = segments_with_collision_v2 = segments_with_collision_v3 = []
+        time_with_trajectories = []
+        time_with_trajectories.append([times_for_v1, tra_v1, try_diff_traj_1_1, len(segments_with_collision_v1)])
+        time_with_trajectories.append([times_for_v2, tra_v2, try_diff_traj_1_2, len(segments_with_collision_v2)])
+        time_with_trajectories.append([times_for_v3, tra_v3, try_diff_traj_1_1, len(segments_with_collision_v3)])
+        min_index = 0
+        min_time = 1000000
+        for i in range(0, len(time_with_trajectories)):
+            if(time_with_trajectories[i][0][0] < min_time and time_with_trajectories[i][0][0] > 0.0):
+                min_time = time_with_trajectories[i][0][0]
+                min_index = i 
+    
+        print(segments_with_collision_v1, segments_with_collision_v2, segments_with_collision_v3)
+        print("selected ....", time_with_trajectories[min_index])
+        return time_with_trajectories[min_index]
+        
+    def getTimesofTrajs(self, traj1, traj2, safety_distance):
+        delay_step = self.dT
+        delay_t = 0.0
+        trajs  = []
+        trajs.append(traj1)
+        trajs.append(traj2)
+        delay_robot_idx = 0
+        nondelay_robot_idx = 1
+        max_time = traj1.getTime()
+        found_delayed_time = True
+        collision_flag, collision_idx = self.trajectoriesCollide(trajs[delay_robot_idx], trajs[nondelay_robot_idx], safety_distance)
+        while collision_flag:
+            delay_t += delay_step
+            trajs[delay_robot_idx].delayStart(delay_t)
+            collision_flag, _ = self.trajectoriesCollide(trajs[delay_robot_idx], trajs[nondelay_robot_idx], safety_distance)
+            if(max_time < delay_t):
+                found_delayed_time =  False
+                break
+        if (found_delayed_time):
+            traj_times = [traj1.getTime(), traj2.getTime()]
+        else:
+            traj_times = [-1.0, traj2.getTime()]
+        return traj_times, traj1, traj2
+    
     # #{ getSmoothPath()
     def getSmoothPath(self, waypoints, lookahead_distance, sampling_step):
         '''

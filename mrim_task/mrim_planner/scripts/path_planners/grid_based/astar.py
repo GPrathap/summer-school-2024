@@ -71,8 +71,14 @@ class Node:
         a = self.pos[0] - self.goal[0]
         b = self.pos[1] - self.goal[1]
         c = self.pos[2] - self.goal[2]
-
-        raise NotImplementedError('[STUDENTS TODO] Heuristic function guiding the state space exploration not implemented. You have to finish it on your own.')
+        import math 
+        heuristic_cost = math.sqrt(a**2 + b**2 + c**2)
+        # tie-breaker: add a small value based on the sum of coordinates
+        # tie_breaker_value = sum(self.pos) * 1e-6  # adjust 1e-6 as needed for small tie-breaking
+        # heuristic_with_tie_breaker = heuristic_cost + tie_breaker_value
+        # return heuristic_with_tie_breaker
+        return heuristic_cost
+        # raise NotImplementedError('[STUDENTS TODO] Heuristic function guiding the state space exploration not implemented. You have to finish it on your own.')
 # # #}
 
 # # #{ class AStar
@@ -92,26 +98,53 @@ class AStar():
         return sqrt(a**2 + b**2 + c**2)
 
     def halveAndTest(self, path):
-        pt1 = path[0]
-        pt2 = path[-1]
-        
+        # If the path is very short, no need to shorten it
         if len(path) <= 2:
             return path
-
-        raise NotImplementedError('[STUDENTS TODO] A*: path straightening is not finished. Finish it on your own.')
-        # Tips:
-        #  - divide the given path by a certain ratio and use this method recursively
-
-        if self.grid.obstacleBetween(pt1, pt2):
-
-            # [STUDENTS TODO] Replace seg1 and seg2 variables effectively
-            seg1 = path[:1]
-            seg2 = path[1:]
-
-            seg1.extend(seg2)
-            return seg1
         
-        return [pt1, pt2]
+        start, end = path[0], path[-1]
+        if not self.grid.obstacleBetween(start, end):
+            # if clear, directly connect start and end points
+            return [start, end]
+        
+        # Start with the first point
+        shortcut_path = [path[0]]
+        
+        # attempt to jump from the last added point to further points
+        current_index = 0
+        while current_index < len(path) - 1:
+            next_index = len(path) - 1  # Start by aiming for the last point
+            while next_index > current_index + 1:
+                if not self.grid.obstacleBetween(path[current_index], path[next_index]):
+                    break
+                next_index -= 1
+            # add the furthest point reachable without obstacles
+            shortcut_path.append(path[next_index])
+            current_index = next_index
+
+        return shortcut_path
+        # pt1 = path[0]
+        # pt2 = path[-1]
+        
+        # if len(path) <= 2:
+        #     return path
+
+        # # raise NotImplementedError('[STUDENTS TODO] A*: path straightening is not finished. Finish it on your own.')
+        # # Tips:
+        # #  - divide the given path by a certain ratio and use this method recursively
+
+        # if self.grid.obstacleBetween(pt1, pt2):
+
+        #     # [STUDENTS TODO] Replace seg1 and seg2 variables effectively
+        #     # seg1 = path[:1]
+        #     # seg2 = path[1:]
+        #     mid_index = len(path) // 2
+        #     seg1 = self.halveAndTest(path[:mid_index + 1])
+        #     seg2 = self.halveAndTest(path[mid_index:])
+        #     seg1.extend(seg2)
+        #     return seg1
+        
+        # return [pt1, pt2]
 
     def generatePath(self, m_start, m_goal):
         
