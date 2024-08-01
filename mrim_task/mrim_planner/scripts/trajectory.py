@@ -706,6 +706,8 @@ class TrajectoryUtils():
 
         # # #}
 
+            safety_distance *= 2.0
+
             # NEW METHOD
             # TODO: if too slow: 
             # - can change the function below to stop searching once a first collision is found
@@ -713,6 +715,7 @@ class TrajectoryUtils():
             colliding_segments_ind_shorter_traj = self.computeCollisionSegmentsOfTwoTrajectories(trajectories[0], trajectories[1], safety_distance)
             # LOOKS LIKE THE ABOVE MIGHT GIVE POSE INDEX INSTEAD???
 
+            delay_time = self.dT
 
             # While collisions occur, delay the shorter trajectory from the first collision
             while len(colliding_segments_ind_shorter_traj) > 0:
@@ -725,7 +728,7 @@ class TrajectoryUtils():
                 # delay the shorter-trajectory UAV at the start point by sampling period
                 #trajectories[delay_robot_idx].delaySegment(colliding_segments_ind_shorter_traj[0][0], 1.0, at_start=True) #self.dT
                 print(f'Index of colliding segment? pose?. Start: {colliding_segments_ind_shorter_traj[0][0]}, End: {colliding_segments_ind_shorter_traj[0][1]}')
-                trajectories[delay_robot_idx].delayPose(colliding_segments_ind_shorter_traj[0][0], 1.0, at_start=True) 
+                trajectories[delay_robot_idx].delayPose(colliding_segments_ind_shorter_traj[0][0], delay_time, at_start=True) 
 
                 print(f'Length of shorter trajectory: {trajectories[delay_robot_idx].getTime()}')
                 print(f'delay_robot_idx: {delay_robot_idx}')
@@ -736,7 +739,7 @@ class TrajectoryUtils():
                 if delay_robot_idx not in delayed_robots:
                     delayed_robots.append(delay_robot_idx)
                 
-                delays[delay_robot_idx] += 1.0 #self.dT
+                delays[delay_robot_idx] += delay_time
 
 
 
