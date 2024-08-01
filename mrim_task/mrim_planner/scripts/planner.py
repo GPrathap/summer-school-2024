@@ -12,6 +12,42 @@ from utils import *
 from solvers.tsp_solvers import *
 from trajectory import Trajectory, TrajectoryUtils
 
+
+def to_homogeneous(points):
+    """ Convert Cartesian coordinates to homogeneous coordinates """
+    points_homogeneous = [np.append(point, 1) for point in points]
+    return points_homogeneous
+
+def compute_lines(points):
+    """ Compute lines between each pair of points in homogeneous coordinates """
+    points = [p.point.asArray() for p in points]
+    points_homogeneous = to_homogeneous(points)
+    lines = []
+
+    for i in range(len(points) - 1):
+        p1 = points_homogeneous[i]
+        p2 = points_homogeneous[i + 1]
+        line = np.cross(p1, p2)
+        lines.append(line)
+    
+    return lines
+
+
+def compute_distance(point, line):
+    """ Compute the distance from a point to a line in homogeneous coordinates """
+    a, b, c = line
+    x, y, w = point
+    distance = np.abs(a * x + b * y + c) / np.sqrt(a**2 + b**2)
+    return distance
+
+def closest_line(point, lines):
+    """ Find the closest line to a given point in homogeneous coordinates """
+    point_homogeneous = to_homogeneous(point)
+    distances = [compute_distance(point_homogeneous, line) for line in lines]
+    min_distance_index = np.argmin(distances)
+    return min_distance_index, distances[min_distance_index]
+
+
 class MrimPlanner:
 
     ALLOWED_COLLISION_AVOIDANCE_METHODS = ['none', 'delay_2nd_till_1st_UAV_finishes', 'delay_till_no_collisions_occur']
@@ -189,7 +225,7 @@ class MrimPlanner:
         
         # for r in range(problem.number_of_robots):
         #     print(len(vps_closest_order[r]))
-        if self._tsp_clustering_method == 'custom':
+        if self._tsp_clustering_method == 'close_means':
             if self._custom_cluster_split == 'even':
                 sorted_vps = []
                 print(len(sorted_vps))
@@ -223,6 +259,14 @@ class MrimPlanner:
 
         elif self._tsp_clustering_method == 'kmeans' or self._tsp_clustering_method == 'random':
             clusters = tsp_solver.clusterViewpoints(problem, nonclustered_vps, method=self._tsp_clustering_method)
+        elif self._tsp_clustering_method == 'path_clustering':
+            segments = dict()
+            for r in range(problem.number_of_robots):
+                tour = compute_tsp_tour(viewpoints[r], self._path_planner)
+                segments[r] = compute_lines(tour)
+
+
+
         
 
 
