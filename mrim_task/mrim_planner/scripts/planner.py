@@ -42,6 +42,7 @@ def compute_distance(point, line):
 
 def closest_line(point, lines):
     """ Find the closest line to a given point in homogeneous coordinates """
+    point = point.point.asArray() 
     point_homogeneous = to_homogeneous(point)
     distances = [compute_distance(point_homogeneous, line) for line in lines]
     min_distance_index = np.argmin(distances)
@@ -260,21 +261,33 @@ class MrimPlanner:
         elif self._tsp_clustering_method == 'kmeans' or self._tsp_clustering_method == 'random':
             clusters = tsp_solver.clusterViewpoints(problem, nonclustered_vps, method=self._tsp_clustering_method)
         elif self._tsp_clustering_method == 'path_clustering':
-            segments = dict()
-            for r in range(problem.number_of_robots):
-                tour = compute_tsp_tour(viewpoints[r], self._path_planner)
-                segments[r] = compute_lines(tour)
+            while len(nonclustered_vps) > 0:
+                segments = dict()
+                best_robot = None
+                shortest_dist = 9999999999999
+                point = None
+                for r in range(problem.number_of_robots):
+                    tour = tsp_solver.plan_tour(problem, viewpoints[r], self._path_planner)
+                    segments[r] = compute_lines(tour)
+                    
+                for p in nonclustered_vps:
+                    for r in range(problem.number_of_robots):
+                        _, dist = closest_line(p, segments[r])
+                        if dist < shortest_dist:
+                            point = p
+                            best_robot = r
+                            shortest_dist = dist
 
-
-
+                viewpoints[best_robot].append(point)
+                nonclustered_vps.remove(point)
         
 
 
         print(clusters)
 
-
-        for r in range(problem.number_of_robots):
-            viewpoints[r].extend(clusters[r])
+        if self._tsp_clustering_method != 'path_clustering':
+            for r in range(problem.number_of_robots):
+                viewpoints[r].extend(clusters[r])
 
         ## END MODIFIED ##
 
