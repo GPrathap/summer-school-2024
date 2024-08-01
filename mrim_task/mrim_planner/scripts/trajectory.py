@@ -6,7 +6,7 @@ Custom TSP Loader
 import math
 import dubins
 
-from utils import segmentPointDist, distEuclidean, lineSphereIntersections, simulateStep, wrapAngle, angleDiff, poseInDistance
+from utils import segmentPointDist, distEuclidean, lineSphereIntersections, simulateStep, wrapAngle, angleDiff, poseInDistance, pointCollidesWithPath
 from data_types import Pose, Viewpoint
 import numpy as np
 
@@ -85,6 +85,33 @@ class Trajectory:
         self.segments[seg_idx].poses = segment.poses[:index] + sequence + segment.poses[index:]
 
     # # #}
+        # # #{ delaySegment()
+    def delayPose(self, pose_inx, t, at_start=True):
+        '''
+        Delays particular segment by t seconds either in start or end point.
+
+        Parameters:
+            seg_idx (int): segment index
+            t (float): delay in seconds
+            at_start (bool): delay is added at the start of the segment if True, at the end otherwise
+        '''
+        # Count number of poses to be added
+        count = int(t / self.dT)
+
+        print(f'Count: {count}')
+        # Copy start/end sample count-times
+        print(f'Number of segments: {len(self.segments)}')
+
+        segment = self.segments[0]
+        #index       = 0 if at_start else -1
+        sequence    = count * [segment.poses[pose_inx]]
+
+        # Replace poses at given segment
+        self.segments[0].poses = segment.poses[:pose_inx] + sequence + segment.poses[pose_inx:]
+        #self.len_changed = True
+
+        print(f'Length of segment: {len(self.segments[0].poses)}')
+
 
     # # #{ delayStart()
     def delayStart(self, t):
@@ -621,7 +648,7 @@ class TrajectoryUtils():
 
         print("[COLLISION AVOIDANCE] method: {:s}".format(method))
         delay_robot_idx, delay_t = None, 0.0
-        delayed_robots, delays   = [], []
+        delayed_robots, delays   = [], [0.0, 0.0]
 
         ## |  [COLLISION AVOIDANCE METHOD #1]: Delay 2nd UAV by the length of the 1st UAV trajectory  |
         if method == 'delay_2nd_till_1st_UAV_finishes':
@@ -640,32 +667,91 @@ class TrajectoryUtils():
             #  - you might select which trajectory it is better to delay
             #  - the smallest delay step is the sampling step stored in variable 'self.dT'
 
-            delay_step = self.dT
-            traj_times = [t.getTime() for t in trajectories]
-            traj_lens  = [t.getLength() for t in trajectories]
+            
+            # 1. fix so delays until no collision occurs
+            #computeCollisionSegmentsOfTwoTrajectories(self, traj_A, traj_B, safety_distance)
+            # -> This function returns a list of tuples (start_idx, end_idx) of colliding segments start and end indices FOR THE SHORTER TRAJECTORY (timewise)
+            
+            
+            #delaySegment(self, seg_idx, t, at_start=False)
+            # 
+            # 2. rather than not taking off, simply slow trajectory of UAV with shorter trajectory (time-wise). Only delay at the waypoint before where collision occurs
 
-            # Decide which UAV should be delayed
-            # [STUDENTS TODO] CHANGE BELOW
-            delay_robot_idx, nondelay_robot_idx = 0, 1
-            if(traj_times[1] < traj_times[0]):
-                delay_robot_idx, nondelay_robot_idx = 1, 0
 
-            # TIP: use function `self.trajectoriesCollide()` to check if two trajectories are in collision
-            collision_flag, collision_idx = self.trajectoriesCollide(trajectories[0], trajectories[1], 2.0*safety_distance)
-            while collision_flag:
+            #delay_step = self.dT
+            # traj_times = [t.getTime() for t in trajectories]
+            #traj_lens  = [t.getLength() for t in trajectories]
 
-                # delay the shorter-trajectory UAV at the start point by sampling period
-                delay_t += delay_step
 
-                # [STUDENTS TODO] use function `trajectory.delayStart(X)` to delay a UAV at the start location by X seconds
-                trajectories[delay_robot_idx].delayStart(delay_t)
-                # keep checking if the robot trajectories collide
-                collision_flag, _ = self.trajectoriesCollide(trajectories[0], trajectories[1], safety_distance)
+            # OLD METHOD (needs fixing!)
+            # # Decide which UAV should be delayed
+            # # [STUDENTS TODO] CHANGE BELOW
+
+            # traj_times = [t.getTime() for t in trajectories]
+            # delay_robot_idx, nondelay_robot_idx = 0, 1
+            # if(traj_times[1] < traj_times[0]):
+            #     delay_robot_idx, nondelay_robot_idx = 1, 0
+
+            # # TIP: use function `self.trajectoriesCollide()` to check if two trajectories are in collision
+            # collision_flag, collision_idx = self.trajectoriesCollide(trajectories[0], trajectories[1], 2.0*safety_distance)
+            # while collision_flag:
+
+            #     # delay the shorter-trajectory UAV at the start point by sampling period
+            #     delay_t += delay_step
+
+            #     # [STUDENTS TODO] use function `trajectory.delayStart(X)` to delay a UAV at the start location by X seconds
+            #     trajectories[delay_robot_idx].delayStart(delay_t)
+            #     # keep checking if the robot trajectories collide
+            #     collision_flag, _ = self.trajectoriesCollide(trajectories[0], trajectories[1], safety_distance)
 
         # # #}
 
-        if delay_robot_idx is not None:
-            delayed_robots, delays = [delay_robot_idx], [delay_t]
+            # NEW METHOD
+            # TODO: if too slow: 
+            # - can change the function below to stop searching once a first collision is found
+            # - can return which traj is shorter so don't have to recompute here
+            colliding_segments_ind_shorter_traj = self.computeCollisionSegmentsOfTwoTrajectories(trajectories[0], trajectories[1], safety_distance)
+            # LOOKS LIKE THE ABOVE MIGHT GIVE POSE INDEX INSTEAD???
+
+
+            # While collisions occur, delay the shorter trajectory from the first collision
+            while len(colliding_segments_ind_shorter_traj) > 0:
+                # Find the shorter trajectory
+                traj_times = [t.getTime() for t in trajectories]
+                delay_robot_idx, nondelay_robot_idx = 0, 1
+                if(traj_times[1] < traj_times[0]):
+                    delay_robot_idx, nondelay_robot_idx = 1, 0
+
+                # delay the shorter-trajectory UAV at the start point by sampling period
+                #trajectories[delay_robot_idx].delaySegment(colliding_segments_ind_shorter_traj[0][0], 1.0, at_start=True) #self.dT
+                print(f'Index of colliding segment? pose?. Start: {colliding_segments_ind_shorter_traj[0][0]}, End: {colliding_segments_ind_shorter_traj[0][1]}')
+                trajectories[delay_robot_idx].delayPose(colliding_segments_ind_shorter_traj[0][0], 1.0, at_start=True) 
+
+                print(f'Length of shorter trajectory: {trajectories[delay_robot_idx].getTime()}')
+                print(f'delay_robot_idx: {delay_robot_idx}')
+
+                colliding_segments_ind_shorter_traj = self.computeCollisionSegmentsOfTwoTrajectories(trajectories[0], trajectories[1], safety_distance)
+
+                # Keep track of delayed robots and delays
+                if delay_robot_idx not in delayed_robots:
+                    delayed_robots.append(delay_robot_idx)
+                
+                delays[delay_robot_idx] += 1.0 #self.dT
+
+
+
+
+                # PROBLEM: SWITCHING WHICH DRONE IS DELAYED
+
+
+
+                 # if there are no colliding segments, return
+                # if len(colliding_segments_ind_shorter_traj) == 0:
+                #     return trajectories, delayed_robots, delays
+
+
+        # if delay_robot_idx is not None:
+        #     delayed_robots, delays = [delay_robot_idx], [delay_t]
 
         return trajectories, delayed_robots, delays
     # # #}

@@ -234,6 +234,8 @@ class MrimPlanner:
             trajectories.append(trajectory)
         # # #}
 
+        # TODO: implement collision avoidance - if a collision is detected, reparametize the sampling above to avoid it (perhaps with different velocity/acceleration limits????
+
         ## | ------------------- Resolve collisions ------------------- |
         if self._collision_avoidance in self.ALLOWED_COLLISION_AVOIDANCE_METHODS:
             trajectories, delayed_robots, delays = trajectory_utils.resolveCollisions(self._collision_avoidance, problem, trajectories, self._safety_distance_mutual)
